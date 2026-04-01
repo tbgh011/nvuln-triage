@@ -300,7 +300,7 @@
     It tells you what the vulnerability actually is, how an attacker would exploit it in practice, how risky it is given your specific stack and environment, and what to do about it — in priority order. It also notes how Contrast Security's IAST, ADR, and SCA tooling would detect or block that class of vulnerability.
   </p>
   <p style="font-size: 13.5px; color: var(--muted); line-height: 1.8; margin-bottom: 0;">
-    It runs entirely in the browser — no backend, no accounts, no data stored. Just your browser, your API key, and Claude.
+    It runs entirely in the browser — no backend, no accounts, no data stored. Just your browser, your API key, and Gemini.
   </p>
 
   <div class="section-heading" style="margin-top: 2rem;">Getting started</div>
@@ -308,11 +308,11 @@
   <div class="step">
     <div class="step-num">1</div>
     <div class="step-body">
-      <div class="step-title">Get an Anthropic API key</div>
+      <div class="step-title">Get a free Google Gemini API key</div>
       <div class="step-desc">
-        VulnTriage is powered by Claude. You'll need a free API key from Anthropic to use it.<br><br>
-        Sign up at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>, create an account, and generate a new API key under <strong>API Keys</strong>. New accounts include free credits.
-        <div class="code-block">sk-ant-api03-XXXXXXXXXXXXXXXXXXXXXXXXXXXX</div>
+        VulnTriage is powered by Google Gemini. You'll need a free API key — no credit card required.<br><br>
+        Go to <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>, sign in with your Google account, and click <strong>Create API key</strong>. It's instant and completely free.
+        <div class="code-block">AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX</div>
       </div>
     </div>
   </div>
@@ -322,7 +322,7 @@
     <div class="step-body">
       <div class="step-title">Enter your key in the app</div>
       <div class="step-desc">
-        Paste your API key into the <strong>Anthropic API Key</strong> field at the bottom of the form. Your key is used directly in the browser and is never sent to any third-party server — it goes straight from your browser to Anthropic's API.
+        Paste your API key into the <strong>Google Gemini API Key</strong> field at the bottom of the form. Your key is used directly in the browser and is never sent to any third-party server — it goes straight from your browser to Google's API.
       </div>
     </div>
   </div>
@@ -400,14 +400,14 @@
   <div class="section-heading">Tips</div>
 
   <div class="note"><strong>More context = better triage.</strong> Telling the tool your framework, whether the endpoint requires auth, and how sensitive the data is will produce a dramatically more useful risk assessment than a bare CVE ID.</div>
-  <div class="note"><strong>Try the CVE Fetch button.</strong> It works great for any CVE from the last few years — it uses Claude to write a clear, human-readable summary so you don't have to wade through NVD XML.</div>
-  <div class="note"><strong>Privacy:</strong> Nothing you enter is stored anywhere. The app has no backend — your input goes directly from your browser to Anthropic's API, and that's it.</div>
+  <div class="note"><strong>Try the CVE Fetch button.</strong> It works great for any CVE from the last few years — it uses Gemini to write a clear, human-readable summary so you don't have to wade through NVD XML.</div>
+  <div class="note"><strong>Privacy:</strong> Nothing you enter is stored anywhere. The app has no backend — your input goes directly from your browser to Google's Gemini API, and that's it.</div>
 
   <div class="cta">
     <a href="index.html">&#9650; Open VulnTriage &rarr;</a>
   </div>
 
-  <footer>VulnTriage &mdash; AI Security Copilot &mdash; Built for Contrast Security Hackathon &mdash; Powered by Claude</footer>
+  <footer>VulnTriage &mdash; AI Security Copilot &mdash; Built for Contrast Security Hackathon &mdash; Powered by Gemini</footer>
 </div>
 </body>
 </html>
