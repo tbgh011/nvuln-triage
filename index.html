@@ -567,9 +567,9 @@
 
   <!-- API Key -->
   <div class="field-group" style="margin-top: 1rem; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
-    <div class="field-label">Anthropic API Key</div>
-    <div class="field-hint">Your key is used directly in the browser and never stored or sent to any server.</div>
-    <input type="password" id="api-key" placeholder="sk-ant-..." />
+    <div class="field-label">Google Gemini API Key</div>
+    <div class="field-hint">Free at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);text-decoration:none;">aistudio.google.com/apikey</a> — no credit card required. Never stored or sent to any server.</div>
+    <input type="password" id="api-key" placeholder="AIzaSy..." />
   </div>
 
   <button class="analyze-btn" id="analyze-btn" onclick="analyze()">
@@ -606,25 +606,24 @@
       return;
     }
     const apiKey = document.getElementById('api-key').value.trim();
-    if (!apiKey) { alert('Please enter your Anthropic API key first.'); return; }
+    if (!apiKey) { alert('Please enter your Gemini API key first.'); return; }
 
     const btn = document.querySelector('.lookup-btn');
     btn.textContent = 'Fetching...';
     btn.disabled = true;
 
     try {
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 600,
-          system: 'You are a CVE lookup assistant. When given a CVE ID, return only a concise 3-5 sentence plain-English description of what the vulnerability is, what software is affected, and what an attacker can do with it. No JSON, no markdown, just clean prose.',
-          messages: [{ role: 'user', content: 'Describe ' + cveId }]
+          system_instruction: { parts: [{ text: 'You are a CVE lookup assistant. When given a CVE ID, return only a concise 3-5 sentence plain-English description of what the vulnerability is, what software is affected, and what an attacker can do with it. No JSON, no markdown, just clean prose.' }] },
+          contents: [{ role: 'user', parts: [{ text: 'Describe ' + cveId }] }],
+          generationConfig: { maxOutputTokens: 600 }
         })
       });
       const data = await resp.json();
-      const text = data.content?.[0]?.text || '';
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       document.getElementById('cve-desc').value = text;
     } catch(e) {
       alert('CVE lookup failed: ' + e.message);
@@ -758,7 +757,7 @@
 
   async function analyze() {
     const apiKey = document.getElementById('api-key').value.trim();
-    if (!apiKey) { alert('Please enter your Anthropic API key.'); return; }
+    if (!apiKey) { alert('Please enter your Gemini API key.'); return; }
 
     const prompt = buildPrompt();
     if (!prompt.trim()) { alert('Please fill in the vulnerability details.'); return; }
@@ -788,19 +787,13 @@ Given a vulnerability description, Contrast Security finding, or security issue,
 Be direct, practical, and opinionated. Prioritize actionability over comprehensiveness.`;
 
     try {
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1500,
-          system: systemPrompt,
-          messages: [{ role: 'user', content: prompt }]
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 1500 }
         })
       });
 
@@ -812,7 +805,7 @@ Be direct, practical, and opinionated. Prioritize actionability over comprehensi
         return;
       }
 
-      let text = data.content?.[0]?.text || '{}';
+      let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
       text = text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
       const json = JSON.parse(text);
       document.getElementById('results').innerHTML = renderResults(json);
