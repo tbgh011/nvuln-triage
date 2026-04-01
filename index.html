@@ -793,7 +793,7 @@ Be direct, practical, and opinionated. Prioritize actionability over comprehensi
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 1500 }
+          generationConfig: { maxOutputTokens: 4000 }
         })
       });
 
