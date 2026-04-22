@@ -168,7 +168,7 @@
     margin-bottom: 8px;
   }
 
-  textarea, input[type="text"] {
+  textarea, input[type="text"], input[type="password"] {
     width: 100%;
     background: var(--surface);
     border: 1px solid var(--border2);
@@ -182,7 +182,7 @@
     transition: border-color 0.15s;
     line-height: 1.6;
   }
-  textarea:focus, input[type="text"]:focus {
+  textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-dim2);
   }
@@ -447,6 +447,30 @@
     margin-top: 1px;
   }
 
+  /* Source badge */
+  .source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .source-nvd {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid rgba(0,229,160,0.25);
+  }
+  .source-ai {
+    background: var(--amber-dim);
+    color: var(--amber);
+    border: 1px solid rgba(255,179,71,0.25);
+  }
+
   /* Error */
   .error-box {
     background: var(--red-dim);
@@ -455,6 +479,17 @@
     padding: 12px 16px;
     color: var(--red);
     font-size: 13px;
+  }
+
+  /* Info box */
+  .info-box {
+    background: var(--amber-dim);
+    border: 1px solid rgba(255,179,71,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--amber);
+    font-size: 12px;
+    margin-top: 8px;
   }
 
   /* Footer */
@@ -506,11 +541,12 @@
   <div class="input-panel active" id="panel-cve">
     <div class="field-group">
       <div class="field-label">CVE Identifier</div>
-      <div class="field-hint">Enter a CVE ID and we'll fetch the description — or paste it manually below.</div>
+      <div class="field-hint">Enter a CVE ID to fetch the official NVD description, or paste it manually below.</div>
       <div class="cve-id-row">
         <input type="text" id="cve-id-input" placeholder="CVE-2024-XXXXX" />
         <button class="lookup-btn" onclick="lookupCVE()">&#8599; Fetch CVE</button>
       </div>
+      <div id="cve-source-indicator"></div>
     </div>
     <div class="field-group">
       <div class="field-label">CVE Description / Advisory Text</div>
@@ -610,29 +646,71 @@
       alert('Please enter a valid CVE ID (e.g. CVE-2024-12345)');
       return;
     }
-    const apiKey = document.getElementById('api-key').value.trim();
-    if (!apiKey) { alert('Please enter your Gemini API key first.'); return; }
 
     const btn = document.querySelector('.lookup-btn');
+    const indicator = document.getElementById('cve-source-indicator');
     btn.textContent = 'Fetching...';
     btn.disabled = true;
+    indicator.innerHTML = '';
+
+    // ── Step 1: Try NVD API directly (authoritative, no API key needed) ──
+    try {
+      const nvdResp = await fetch(
+        `https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=${encodeURIComponent(cveId.toUpperCase())}`,
+        { headers: { 'Accept': 'application/json' } }
+      );
+      if (nvdResp.ok) {
+        const nvdData = await nvdResp.json();
+        const vuln = nvdData?.vulnerabilities?.[0]?.cve;
+        const enDesc = vuln?.descriptions?.find(d => d.lang === 'en')?.value;
+        if (enDesc) {
+          document.getElementById('cve-desc').value = enDesc;
+          indicator.innerHTML = '<div class="info-box" style="background:var(--accent-dim);border-color:rgba(0,229,160,0.3);color:var(--accent);">&#10003; Description fetched from NVD — official source.</div>';
+          btn.textContent = '↗ Fetch CVE';
+          btn.disabled = false;
+          return;
+        }
+      }
+    } catch (e) {
+      // NVD unreachable — fall through to Gemini
+    }
+
+    // ── Step 2: Gemini fallback (with corrected instructions about CVE year semantics) ──
+    const apiKey = document.getElementById('api-key').value.trim();
+    if (!apiKey) {
+      indicator.innerHTML = '<div class="info-box">NVD lookup returned no data for this CVE. Enter your Gemini API key above to use AI as a fallback, or paste the description manually.</div>';
+      btn.textContent = '↗ Fetch CVE';
+      btn.disabled = false;
+      return;
+    }
 
     try {
-      const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: 'You are a CVE lookup assistant. When given a CVE ID, return only a concise 3-5 sentence plain-English description of what the vulnerability is, what software is affected, and what an attacker can do with it. No JSON, no markdown, just clean prose.' }] },
-          contents: [{ role: 'user', parts: [{ text: 'Describe ' + cveId }] }],
-          generationConfig: { maxOutputTokens: 600 }
-        })
-      });
+      const resp = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: `You are a CVE lookup assistant. When given a CVE ID, return only a concise 3-5 sentence plain-English description of what the vulnerability is, what software is affected, and what an attacker can do with it. No JSON, no markdown, just clean prose.
+
+Important: CVE IDs use the year the ID was reserved, not the year of public disclosure. A CVE with a 2025 or 2026 ID may be a real, recently published vulnerability. Never refuse to respond based on the year in the CVE ID. If you have no specific knowledge of the CVE, say so plainly and note that the user should check NVD directly for the authoritative description.` }] },
+            contents: [{ role: 'user', parts: [{ text: 'Describe ' + cveId }] }],
+            generationConfig: { maxOutputTokens: 600 }
+          })
+        }
+      );
       const data = await resp.json();
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      document.getElementById('cve-desc').value = text;
-    } catch(e) {
-      alert('CVE lookup failed: ' + e.message);
+      if (text) {
+        document.getElementById('cve-desc').value = text;
+        indicator.innerHTML = '<div class="info-box">&#9888; Description generated by AI (NVD returned no data). Verify against <a href="https://nvd.nist.gov/vuln/detail/' + encodeURIComponent(cveId.toUpperCase()) + '" target="_blank" style="color:var(--amber);text-decoration:underline;">NVD</a> before acting on this.</div>';
+      } else {
+        indicator.innerHTML = '<div class="info-box">No description found. Try pasting it manually from <a href="https://nvd.nist.gov/vuln/detail/' + encodeURIComponent(cveId.toUpperCase()) + '" target="_blank" style="color:var(--amber);text-decoration:underline;">NVD</a>.</div>';
+      }
+    } catch (e) {
+      indicator.innerHTML = '<div class="info-box">CVE lookup failed: ' + escHtml(e.message) + '. Try pasting the description manually.</div>';
     }
+
     btn.textContent = '↗ Fetch CVE';
     btn.disabled = false;
   }
