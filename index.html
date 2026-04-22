@@ -511,12 +511,160 @@
     header { flex-direction: column; gap: 1rem; }
     .logo-title { font-size: 22px; }
   }
+
+  /* Print to PDF button */
+  .print-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 14px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    margin-top: 8px;
+    transition: all 0.15s;
+  }
+  .print-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim2);
+  }
+  .print-btn svg { flex-shrink: 0; }
+
+  /* ── Print / PDF styles ── */
+  @media print {
+    /* Force light background for PDF readability */
+    :root {
+      --bg: #ffffff;
+      --surface: #f7f8fa;
+      --surface2: #f0f2f5;
+      --border: #dde1e8;
+      --border2: #c8cdd8;
+      --text: #0d1117;
+      --muted: #556070;
+      --accent: #007a55;
+      --accent-dim: rgba(0,122,85,0.08);
+      --accent-dim2: rgba(0,122,85,0.04);
+      --red: #c0001e;
+      --red-dim: rgba(192,0,30,0.08);
+      --amber: #925000;
+      --amber-dim: rgba(146,80,0,0.08);
+      --blue: #1a4abf;
+      --blue-dim: rgba(26,74,191,0.08);
+    }
+
+    /* Hide everything except the results */
+    .notice-bar, header, .mode-tabs, .input-panel,
+    .api-key-block, .analyze-btn, .print-btn,
+    footer, body::before { display: none !important; }
+
+    body {
+      background: #fff;
+      color: #0d1117;
+      font-size: 11pt;
+    }
+
+    .wrap {
+      max-width: 100%;
+      padding: 0;
+    }
+
+    /* PDF header injected via JS before print */
+    .pdf-header {
+      display: block !important;
+      margin-bottom: 20pt;
+      padding-bottom: 12pt;
+      border-bottom: 2px solid #007a55;
+    }
+
+    #results { margin-top: 0; }
+
+    .result-header {
+      border-bottom: 1px solid #dde1e8;
+      margin-bottom: 12pt;
+      padding-bottom: 8pt;
+    }
+    .result-title { font-size: 16pt; }
+
+    .score-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8pt;
+      margin-bottom: 14pt;
+    }
+    .score-card {
+      border: 1px solid #dde1e8;
+      background: #f7f8fa;
+      break-inside: avoid;
+    }
+    .score-card .sc-value { font-size: 16pt; }
+
+    .result-section {
+      border: 1px solid #dde1e8;
+      background: #f7f8fa;
+      margin-bottom: 8pt;
+      break-inside: avoid;
+    }
+
+    .rs-icon {
+      border: 1px solid #dde1e8;
+      background: #eef0f4 !important;
+      color: #556070 !important;
+    }
+
+    .steps-list li { border-bottom: 1px solid #dde1e8; }
+    .steps-list li::before {
+      background: rgba(0,122,85,0.1);
+      color: #007a55;
+    }
+
+    .priority-badge { border: 1px solid currentColor; }
+
+    /* Severity colours stay readable on white */
+    .sev-critical .sc-value { color: #c0001e; }
+    .sev-high .sc-value     { color: #925000; }
+    .sev-medium .sc-value   { color: #1a4abf; }
+    .sev-low .sc-value      { color: #007a55; }
+
+    .p-critical { background: rgba(192,0,30,0.08);  color: #c0001e; }
+    .p-high     { background: rgba(146,80,0,0.08);  color: #925000; }
+    .p-medium   { background: rgba(26,74,191,0.08); color: #1a4abf; }
+    .p-low      { background: rgba(0,122,85,0.08);  color: #007a55; }
+
+    .icon-red   { background: rgba(192,0,30,0.08)  !important; color: #c0001e !important; }
+    .icon-amber { background: rgba(146,80,0,0.08)  !important; color: #925000 !important; }
+    .icon-blue  { background: rgba(26,74,191,0.08) !important; color: #1a4abf !important; }
+    .icon-green { background: rgba(0,122,85,0.08)  !important; color: #007a55 !important; }
+    .icon-muted { background: #eef0f4 !important;   color: #556070 !important; }
+
+    .info-box {
+      background: rgba(0,122,85,0.06) !important;
+      border-color: rgba(0,122,85,0.3) !important;
+      color: #007a55 !important;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    @page {
+      margin: 18mm 16mm;
+      size: A4;
+    }
+  }
+
+  /* Hide PDF header in screen view */
+  .pdf-header { display: none; }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div style="background:var(--accent-dim);border:1px solid rgba(0,229,160,0.35);border-radius:8px;padding:10px 16px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+  <div class="notice-bar" style="background:var(--accent-dim);border:1px solid rgba(0,229,160,0.35);border-radius:8px;padding:10px 16px;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:12px;">
     <span style="font-size:13px;color:var(--accent);"><strong>&#9888; IMPORTANT:</strong> Read the <a href="quickstart.html" style="color:var(--accent);text-decoration:underline;font-weight:500;">Quickstart Guide</a> first before using this app.</span>
     <a href="quickstart.html" style="font-size:12px;color:var(--accent);text-decoration:none;white-space:nowrap;border:1px solid rgba(0,229,160,0.4);border-radius:6px;padding:5px 12px;background:var(--accent-dim2);">Read guide &rarr;</a>
   </div>
@@ -607,7 +755,7 @@
   </div>
 
   <!-- API Key -->
-  <div class="field-group" style="margin-top: 1rem; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
+  <div class="api-key-block field-group" style="margin-top: 1rem; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
     <div class="field-label">Google Gemini API Key</div>
     <div class="field-hint">Free at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);text-decoration:none;">aistudio.google.com/apikey</a> — no credit card required. Never stored or sent to any server.</div>
     <input type="password" id="api-key" placeholder="AIzaSy..." />
@@ -618,7 +766,20 @@
     <span id="btn-text">&#9650; Analyze Vulnerability</span>
   </button>
 
+  <!-- PDF-only header, hidden on screen, shown when printing -->
+  <div class="pdf-header" id="pdf-header"></div>
+
   <div id="results"></div>
+
+  <div id="print-btn-wrap" style="display:none;">
+    <button class="print-btn" onclick="printResults()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+        <rect x="6" y="14" width="12" height="8"/>
+      </svg>
+      Print / Save as PDF
+    </button>
+  </div>
 
   <footer>
     <span>VulnTriage &mdash; AI security lookup &mdash; Built for Contrast Security Hackathon</span>
@@ -638,6 +799,8 @@
     document.querySelectorAll('.input-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-' + mode).classList.add('active');
     document.getElementById('results').innerHTML = '';
+    document.getElementById('print-btn-wrap').style.display = 'none';
+    document.getElementById('pdf-header').innerHTML = '';
   }
 
   async function lookupCVE() {
@@ -834,6 +997,54 @@ Important: CVE IDs use the year the ID was reserved, not the year of public disc
     `;
   }
 
+  function printResults() {
+    // Build the PDF header content from current inputs
+    const mode = currentMode;
+    let title = 'VulnTriage Report';
+    let subtitle = '';
+
+    if (mode === 'cve') {
+      const id = document.getElementById('cve-id-input').value.trim();
+      const desc = document.getElementById('cve-desc').value.trim();
+      const stack = document.getElementById('cve-stack').value.trim();
+      const exposure = document.getElementById('cve-exposure').value;
+      const sourceEl = document.getElementById('cve-source-indicator');
+      const sourceText = sourceEl ? sourceEl.innerText.trim() : '';
+
+      title = id || 'CVE Triage Report';
+      subtitle = `
+        ${desc ? `<div style="margin:6pt 0 4pt;font-size:9pt;color:#556070;line-height:1.5;">${escHtml(desc)}</div>` : ''}
+        ${sourceText ? `<div style="font-size:8pt;color:#007a55;margin-top:4pt;">&#10003; ${escHtml(sourceText.replace(/[✓⚠]/g,'').trim())}</div>` : ''}
+        ${stack ? `<div style="font-size:8.5pt;color:#556070;margin-top:4pt;">Stack: ${escHtml(stack)} &nbsp;·&nbsp; Exposure: ${escHtml(exposure)}</div>` : ''}
+      `;
+    } else if (mode === 'finding') {
+      const app = document.getElementById('finding-app').value.trim();
+      const env = document.getElementById('finding-env').value;
+      title = app ? `${app} — Contrast Finding` : 'Contrast Finding';
+      subtitle = `<div style="font-size:8.5pt;color:#556070;margin-top:4pt;">Environment: ${escHtml(env)}</div>`;
+    } else {
+      title = 'Freeform Security Issue';
+    }
+
+    const now = new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+
+    document.getElementById('pdf-header').innerHTML = `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16pt;">
+        <div>
+          <div style="font-size:8pt;color:#007a55;letter-spacing:0.12em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-bottom:4pt;">■ VulnTriage — AI Security Lookup</div>
+          <div style="font-size:20pt;font-weight:800;font-family:'Syne',sans-serif;color:#0d1117;line-height:1.1;">${escHtml(title)}</div>
+          ${subtitle}
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:8pt;color:#556070;margin-top:4pt;">${escHtml(now)}</div>
+          <div style="font-size:7pt;color:#aab0bc;margin-top:2pt;">Powered by Gemini · nvd.nist.gov</div>
+        </div>
+      </div>
+    `;
+
+    window.print();
+  }
+
   function escHtml(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
@@ -847,6 +1058,8 @@ Important: CVE IDs use the year the ID was reserved, not the year of public disc
 
     setLoading(true);
     document.getElementById('results').innerHTML = '';
+    document.getElementById('print-btn-wrap').style.display = 'none';
+    document.getElementById('pdf-header').innerHTML = '';
 
     const systemPrompt = `You are VulnTriage, an expert application security analyst working at Contrast Security. You specialize in triage of CVEs and runtime security findings.
 
@@ -892,6 +1105,7 @@ Be direct, practical, and opinionated. Prioritize actionability over comprehensi
       text = text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
       const json = JSON.parse(text);
       document.getElementById('results').innerHTML = renderResults(json);
+      document.getElementById('print-btn-wrap').style.display = 'block';
 
     } catch(e) {
       document.getElementById('results').innerHTML = `<div class="error-box">Error: ${escHtml(e.message)}. Check your API key and try again.</div>`;
